@@ -4,6 +4,8 @@ node_js:
 install:
 - cd functions
 - npm install
+before_deploy:
+- cd ..
 deploy:
   provider: firebase
   skip_cleanup: true
