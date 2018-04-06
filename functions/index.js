@@ -20,19 +20,34 @@ exports.submitContactForm = functions.https.onRequest((req, res) => {
     method: 'POST',
     formData: {
       secret: recaptchaSecret,
-      response: req.body['g-recaptcha-response']
+      response: req.body.response,
     },
     json: true,
-  }).then(result => {
+  }).then((result) => {
     if (result.success) {
+      console.log('*** Successfully validated recaptcha ***');
       sendEmail(req.body)
-        .then(() => res.status(200).send(true))
-        .catch(reason => res.status(500).send(reason));
+        .then(() => {
+          console.log('*** Successfully sent email ***');
+          return res.status(200).send(true);
+        })
+        .catch((reason) => {
+          console.error('*** Error sending email ***');
+          return res.status(500).send({
+            body: req.body,
+            reason,
+          });
+        });
+    } else {
+      console.error('*** Recaptcha validation failed ***');
+      return res.status(500).send(false);
     }
-
-    return res.status(500).send('Recaptcha failed.');
-  }).catch(reason => {
-    return res.status(500).send(reason);
+  }).catch((reason) => {
+    console.error('*** Error validating recaptcha ***');
+    return res.status(500).send({
+      body: req.body,
+      reason,
+    });
   })
 
 });
